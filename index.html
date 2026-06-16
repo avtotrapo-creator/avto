@@ -478,7 +478,9 @@ function initSupa(){
 }
 // try immediately, then retry when script loads
 initSupa();
-document.querySelector('script[src*="supabase"]').addEventListener('load',()=>{ initSupa(); if(typeof render==='function') render(); });
+const _supaSc=document.querySelector('script[src*="supabase"]');
+if(_supaSc) _supaSc.addEventListener('load',()=>{ initSupa(); if(typeof render==='function') render(); });
+window.addEventListener('load',()=>{ initSupa(); if(typeof render==='function') render(); });
 
 function load(){
   try{
