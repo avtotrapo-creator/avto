@@ -1199,5 +1199,15 @@ function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
   }catch(e){}
 })();
 </script>
+<script>
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/avto/sw.js')
+    .then(reg => {
+      // Check for updates immediately and every 60 seconds
+      reg.update();
+      setInterval(() => reg.update(), 60000);
+    });
+}
+</script>
 </body>
 </html>
