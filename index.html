@@ -1080,40 +1080,12 @@ function render(){
     });
   }
 
-  // On "today" tab, prepend overdue (past-dated, undelivered) orders as a warning section
-  var overdueList=[];
-  if(tab==='today'){
-    overdueList=all.filter(function(o){ return !o.done && o.date && o.date<today(); });
-    overdueList.sort(function(a,b){ return a.date.localeCompare(b.date)||a.id-b.id; });
-  }
-
   const el=document.getElementById('list');
-  if(!list.length && !overdueList.length){ el.innerHTML='<div class="empty"><div class="emptyic">📭</div><p>შეკვეთა არ არის</p></div>'; return; }
+  if(!list.length){ el.innerHTML='<div class="empty"><div class="emptyic">📭</div><p>შეკვეთა არ არის</p></div>'; return; }
 
   const SLOT_HDR=['🏃 დ ი ლ ა 🏃','🌞 შ უ ა დ ღ ე 🌞','🌛 ს ა ღ ა მ ო 🌛'];
   const SLOT_COL=['#f39c12','#27ae60','#8e44ad'];
   let html='';
-
-  // Overdue warning section
-  if(overdueList.length){
-    html+=`<div style="margin:0 0 12px;border-radius:12px;background:#c0392b;padding:10px 14px">
-      <div style="font-size:13px;font-weight:900;color:#fff;margin-bottom:6px">⚠️ გამოუგზავნელი წინა დღეებიდან — ${overdueList.length} შეკვეთა</div>`;
-    var byOverdueDate={};
-    overdueList.forEach(function(o){ if(!byOverdueDate[o.date]) byOverdueDate[o.date]=[]; byOverdueDate[o.date].push(o); });
-    Object.keys(byOverdueDate).sort().forEach(function(d){
-      html+=`<div style="font-size:11px;color:rgba(255,255,255,.7);margin:6px 0 3px">${separatorLabel(d)}</div>`;
-      byOverdueDate[d].forEach(function(o){
-        var ph=(o.phone||'').replace(/\s/g,'');
-        var firstLine=(o.raw||'').replace(/\[D\d\]/,'').split('\n')[0].trim();
-        var ctag=o.courier?(CT[o.courier]||''):'— კურიერი —';
-        html+=`<div style="background:rgba(0,0,0,.25);border-radius:8px;padding:7px 10px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center" onclick="showCourierConfirm(${o.id})">
-          <div style="color:#fff;font-size:13px;font-weight:700">${firstLine}</div>
-          <div style="color:rgba(255,255,255,.8);font-size:11px">${ctag}</div>
-        </div>`;
-      });
-    });
-    html+=`</div>`;
-  }
 
   if(tab==='orders'){
     const byReceived={};
