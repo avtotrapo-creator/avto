@@ -5,7 +5,7 @@
 <script>
 // Force fresh load — bypass any cached old version
 (function(){
-  var V='v8';
+  var V='v9';
   if(location.search.indexOf('v='+V)===-1){
     location.replace('/avto/?v='+V);
   }
@@ -398,7 +398,7 @@ const GEO_WDAYS=[['კვირა',0],['ორშაბათი',1],['სა�
 const GEO_WSHORT=['კვი','ორშ','სამ','ოთხ','ხუთ','პარ','შაბ'];
 function weekdayDate(wd){
   const now=new Date(); let diff=wd-now.getDay();
-  if(diff<=0) diff+=7;
+  if(diff<0) diff+=7;
   const d=new Date(now); d.setDate(now.getDate()+diff); return ymd(d);
 }
 function dayName(d){
@@ -456,11 +456,17 @@ function extractPhone(raw){
 function slotBucket(raw){
   // manual override stored as [D0],[D1],[D2] prefix
   const dm=raw.match(/^\[D([012])\]/); if(dm) return parseInt(dm[1]);
-  function pm(h){ return (h>=1&&h<=9)?h+12:h; }
-  function slot(h){ h=pm(h); if(h>=11&&h<13)return 0; if(h>=13&&h<16)return 1; if(h>=16)return 2; return 3; }
-  // range A-B (skip decimals like 5-5.5 or 5.5-6)
-  const rm = raw.match(/(?<![\d.])\b(\d{1,2})\s*[\u2013\-]\s*(\d{1,2})\b(?!\.\d)/);
-  if(rm){ const s=slot(parseInt(rm[1])); if(s<3) return s; }
+  // pm(): only 1-8 are ambiguous → treat as PM; 9-12 are AM (morning deliveries)
+  function pm(h){ return (h>=1&&h<=8)?h+12:h; }
+  function slot(h){ h=pm(h); if(h>=9&&h<=12)return 0; if(h>=13&&h<=15)return 1; if(h>=16&&h<=23)return 2; return 3; }
+  // range A-B — skip lines containing კგ (weight, not time)
+  let _rs=3;
+  for(const _ln of raw.split('\n')){
+    if(/კგ/.test(_ln)) continue;
+    const rm=_ln.match(/(?<![\d.])\b(\d{1,2})\s*[\u2013\-]\s*(\d{1,2})\b(?!\.\d)/);
+    if(rm){ const s=slot(parseInt(rm[1])); if(s<3){_rs=s;break;} }
+  }
+  if(_rs<3) return _rs;
   // single time with სთ or ს
   const m = raw.match(/\b(\d{1,2})\s*(?:სთ|ს)/);
   if(m){ const s=slot(parseInt(m[1])); if(s<3) return s; }
