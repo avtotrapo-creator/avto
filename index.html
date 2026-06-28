@@ -5,7 +5,7 @@
 <script>
 // Force fresh load — bypass any cached old version
 (function(){
-  var V='v10';
+  var V='v11';
   if(location.search.indexOf('v='+V)===-1){
     location.replace('/avto/?v='+V);
   }
@@ -660,18 +660,15 @@ function login(n,r){
   startRealtime();
   document.getElementById('login').style.display='none';
   document.getElementById('app').style.display='flex';
-  // restore last-used tab across refreshes
-  const _rt=localStorage.getItem('pw4_tab');
-  if(_rt){ tab=_rt; document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on')); const _tb=document.getElementById('t-'+_rt); if(_tb)_tb.classList.add('on'); }
   document.getElementById('huser').textContent=n;
   if(r==='admin'){
     document.getElementById('addbtn').style.display='flex';
     document.getElementById('stats').style.display='grid';
     document.getElementById('t-orders').style.display='block';
-    setTab('orders');
+    setTab(localStorage.getItem('pw4_tab') || 'orders');
   } else {
     document.getElementById('t-mine').style.display='block';
-    setTab('mine');
+    setTab(localStorage.getItem('pw4_tab') || 'mine');
   }
   render();
 }
