@@ -5,7 +5,7 @@
 <script>
 // Force fresh load — bypass any cached old version
 (function(){
-  var V='v11';
+  var V='v12';
   if(location.search.indexOf('v='+V)===-1){
     location.replace('/avto/?v='+V);
   }
@@ -112,7 +112,7 @@ body.dark .slotbtn.on { border-color:#e74c3c; background:#e74c3c; color:#fff; }
 .card.morning   { border-left-color:#f39c12; }
 .card.afternoon { border-left-color:#27ae60; }
 .card.evening   { border-left-color:#8e44ad; }
-.card.done      { opacity:.42; }
+.card.done      { }
 
 .ctop  { display:flex; align-items:center; justify-content:space-between; padding:10px 14px 6px; }
 .phonebtn { display:inline-flex; align-items:center; gap:6px; font-size:15px; font-weight:900; color:#15803d; text-decoration:none; background:#f0fdf4; border:1.5px solid #bbf7d0; border-radius:24px; padding:6px 13px; }
