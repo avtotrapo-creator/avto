@@ -1203,7 +1203,7 @@ function render(){
 }
 
 function productTotals(orders){
-  let piglet=0, khach=0, lob=0;
+  let piglet=0, khach=0, lob=0, dafa=0;
   const stur={}, sal={};   // kg -> ცალის რაოდენობა
   const intCount=s=>{ const m=s.match(/(\d+)/); return m?parseInt(m[1]):1; };
   const addFish=(map,l)=>{
@@ -1223,6 +1223,8 @@ function productTotals(orders){
     raw.split('\n').forEach(line=>{
       const l=line.trim();
       if(!l) return;
+      // დაფა — ცალკე ითვლება, ნებისმიერ ხაზზე (ზუთხის/ორაგულის — მნიშვნელობა არ აქვს)
+      if(/დაფ[აე]/.test(l)){ const dm=l.match(/(\d+)\s*დაფ/); dafa+=dm?parseInt(dm[1]):1; }
       const cm=l.match(/(?:^|\s)(\d+)\s*ც(?:ალი)?(?:\s|\d|$)/);
       const pcnt=cm?parseInt(cm[1]):1;
       if(/ზუთხ/i.test(l)){ addFish(stur,l); return; }
@@ -1237,7 +1239,7 @@ function productTotals(orders){
       if(/გოჭ/i.test(l)){ piglet+=pcnt; return; }
     });
   });
-  return {piglet, stur, sal, khach, lob};
+  return {piglet, stur, sal, khach, lob, dafa};
 }
 function _fmtN(n){ return (n%1)?(+n.toFixed(2)).toString():n.toString(); }
 function _fishStr(map){
@@ -1250,6 +1252,7 @@ function dayTotalsHtml(orders){
   if(Object.keys(t.sal).length) rows.push(`🐟 ორაგული — ${_fishStr(t.sal)}`);
   if(t.khach) rows.push(`🫓 ხაჭაპური — <b>${t.khach}</b>`);
   if(t.lob) rows.push(`🫘 ლობიანი — <b>${t.lob}</b>`);
+  if(t.dafa) rows.push(`🪵 დაფა — <b>${t.dafa}</b>`);
   return `<div style="margin:16px 0 10px;border:2px solid #c0392b;border-radius:14px;background:rgba(192,57,43,.07);padding:12px 16px">
     <div style="font-size:13px;font-weight:900;color:#c0392b;margin-bottom:8px;letter-spacing:.5px">📊 დღის ჯამი · მხოლოდ ავთო/ხათო</div>
     <div style="font-size:15px;line-height:1.95">${rows.join('<br>')}</div>
