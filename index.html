@@ -309,7 +309,7 @@ body.dark .cs-row { border-color:#2a2a2a; }
 
     <div class="formbox" id="form">
       <div class="fgroup">
-        <textarea class="finp-big" id="f-raw" rows="7" style="resize:none;line-height:1.6;font-size:16px" oninput="autoSlotDetect()"></textarea>
+        <textarea class="finp-big" id="f-raw" rows="10" placeholder="ერთი ან რამდენიმე შეკვეთა.&#10;რამდენიმე შეკვეთა გამოყავი ცარიელი ხაზით — თითოს თარიღი და დრო თვითონ განისაზღვრება." style="resize:none;line-height:1.6;font-size:16px" oninput="autoSlotDetect()"></textarea>
       </div>
       <div class="slotpick">
         <button class="slotbtn" id="sb0" onclick="pickSlot(0)">🏃 დილა</button>
@@ -762,19 +762,34 @@ function autoSlotDetect(){
 
 function saveOrder(){
   if(!ADMINS.includes(me)){ alert('მხოლოდ ავთო და ხათო ამატებენ'); return; }
-  let raw = document.getElementById('f-raw').value.trim();
-  if(!raw){ alert('ჩაწერე შეკვეთა'); return; }
-  if(/თ\s*\/\s*წ/i.test(raw) && !raw.includes('📌')){
-    const lines=raw.split('\n'); lines[0]=lines[0].trimEnd()+' 📌'; raw=lines.join('\n');
-  }
-  raw=autoFormat(raw);
-  const slotPfx=_pickedSlot>=0?'[D'+_pickedSlot+']':'';
-  const rawStored=slotPfx+raw;
-  const newOrder={ id: Date.now(), raw: rawStored, phone: extractPhone(raw), date: detectDate(raw), courier:'', done:false, by:me };
+  const rawAll = document.getElementById('f-raw').value.trim();
+  if(!rawAll){ alert('ჩაწერე შეკვეთა'); return; }
+
+  // რამდენიმე შეკვეთა ერთდროულად: ცარიელი ხაზ(ებ)ით გამოყოფილი თითო ბლოკი = თითო შეკვეთა.
+  // (ორ ტელეფონიანი ერთი შეკვეთა ერთად რჩება, რადგან მათ შორის ცარიელი ხაზი არ არის.)
+  const blocks = rawAll.split(/\n\s*\n+/).map(b=>b.trim()).filter(Boolean);
+
   const a=load();
-  a.push(newOrder);
+  const added=[];
+  const baseId=Date.now();
+  blocks.forEach((block,i)=>{
+    let raw=block;
+    if(/თ\s*\/\s*წ/i.test(raw) && !raw.includes('📌')){
+      const lines=raw.split('\n'); lines[0]=lines[0].trimEnd()+' 📌'; raw=lines.join('\n');
+    }
+    raw=autoFormat(raw);
+    // სლოტი: თუ ღილაკით მანუალურად აირჩა — ვრცელდება ყველა შეკვეთაზე;
+    // თუ არ აურჩევია — თითოეულს თავისი დროიდან განესაზღვრება.
+    const slot = (_slotManual && _pickedSlot>=0) ? _pickedSlot : slotBucket(raw);
+    const slotPfx = (slot>=0 && slot<3) ? '[D'+slot+']' : '';
+    const order={ id: baseId+i, raw: slotPfx+raw, phone: extractPhone(raw), date: detectDate(raw), courier:'', done:false, by:me };
+    a.push(order);
+    added.push(order);
+  });
+
   store(a); closeForm(); render();
-  cloudPush(newOrder);
+  added.forEach(o=>cloudPush(o));
+  if(added.length>1) alert('✅ დაემატა '+added.length+' შეკვეთა');
 }
 
 let _lastTap={id:null,t:0};
