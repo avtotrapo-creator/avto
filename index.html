@@ -451,7 +451,14 @@ function autoFormat(raw){
   return r;
 }
 function extractPhone(raw){
-  const m=raw.match(/[\d]{9,}/); return m?m[0]:'';
+  // ქართული მობილური: 9 ციფრი, იწყება 5-ით — იჭერს გამოტოვებებით/დეფისებით ჩაწერილსაც (მაგ. "599 909 982")
+  for(const ln of raw.split('\n')){
+    const d=ln.replace(/[^\d]/g,'');
+    const m=d.match(/5\d{8}/);
+    if(m) return m[0];
+  }
+  const m2=raw.match(/\d{9,}/); // fallback: ნებისმიერი 9+ ზედიზედ ციფრი
+  return m2?m2[0]:'';
 }
 function slotBucket(raw){
   // manual override stored as [D0],[D1],[D2] prefix
@@ -1072,12 +1079,15 @@ function render(){
     });
   }
 
-  // Duplicate detection: same phone+date+slot
+  // Duplicate detection: ერთი და იგივე ნომერი, იმავე დღეს, იმავე სლოტში.
+  // ნომრის გარეშე შეკვეთა (მაგ. მხოლოდ სახელი) არასდროს ითვლება განმეორებად.
   const dupIds=new Set();
   const seen={};
   all.forEach(o=>{
-    const key=(o.phone||'').replace(/\D/g,'')+'_'+o.date+'_'+slotBucket(o.raw||'');
-    if(seen[key]) dupIds.add(o.id), dupIds.add(seen[key]);
+    const digits=extractPhone(o.raw||''); // ვიღებთ ნომერს raw-იდან (გამოტოვებებიანსაც)
+    if(!digits) return;                    // ნომერი არ არის → არ არის დუბლი
+    const key=digits+'_'+o.date+'_'+slotBucket(o.raw||'');
+    if(seen[key]){ dupIds.add(o.id); dupIds.add(seen[key]); }
     else seen[key]=o.id;
   });
 
