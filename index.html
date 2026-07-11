@@ -1203,9 +1203,21 @@ function render(){
 }
 
 function productTotals(orders){
-  let piglet=0, sturN=0, sturKg=0, salN=0, salKg=0, khach=0, lob=0, chick=0;
-  const kgBefore=s=>{ const m=s.match(/(\d+(?:\.\d+)?)\s*კგ/); return m?parseFloat(m[1]):0; };
+  let piglet=0, khach=0, lob=0;
+  const stur={}, sal={};   // kg -> ცალის რაოდენობა
   const intCount=s=>{ const m=s.match(/(\d+)/); return m?parseInt(m[1]):1; };
+  const addFish=(map,l)=>{
+    l=l.replace(/(\d),(\d)/g,'$1.$2');                 // მძიმიანი წონა → წერტილი (2,5 → 2.5)
+    l=l.replace(/ზუთხ\S*|ორაგულ\S*|🐬|🐟/gi,' ');       // ვშლით სახელს/emoji-ს
+    l.split('კგ').forEach(seg=>{                        // თითო "კგ" = თითო წონის ჯგუფი
+      if(!/\d/.test(seg)) return;
+      const cm=seg.match(/(\d+)\s*ც(?:ალი)?/);
+      const cnt=cm?parseInt(cm[1]):1;
+      const rest=cm?seg.replace(cm[0],' '):seg;
+      const km=rest.match(/(\d+(?:\.\d+)?)/);
+      if(km){ const kg=parseFloat(km[1]); map[kg]=(map[kg]||0)+cnt; }
+    });
+  };
   orders.forEach(o=>{
     const raw=(o.raw||'').replace(/^\[D[012]\]/,'');
     raw.split('\n').forEach(line=>{
@@ -1213,11 +1225,11 @@ function productTotals(orders){
       if(!l) return;
       const cm=l.match(/(?:^|\s)(\d+)\s*ც(?:ალი)?(?:\s|\d|$)/);
       const pcnt=cm?parseInt(cm[1]):1;
-      if(/ზუთხ/i.test(l)){ sturN+=pcnt; sturKg+=kgBefore(l); return; }
-      if(/ორაგულ/i.test(l)){ salN+=pcnt; salKg+=kgBefore(l); return; }
+      if(/ზუთხ/i.test(l)){ addFish(stur,l); return; }
+      if(/ორაგულ/i.test(l)){ addFish(sal,l); return; }
       if(/ხაჭაპ/i.test(l)){ khach+=intCount(l); return; }
       if(/ლობ/i.test(l)){ lob+=intCount(l); return; }
-      if(/წიწილ/i.test(l)){ chick+=intCount(l); return; }
+      if(/წიწილ/i.test(l)){ return; }
       if(/(^|\s)ნახ/.test(l) && !/კგ/.test(l) && l.replace(/[^Ⴀ-ჿ]/g,'').length<=8){ piglet+=1; return; }
       const core=l.replace(/[🐷🐖❗️❗📌⭕️*]/g,'').replace(/ბომბა|გრძელი|დაჭრ\S*|კგ|ც(?:ალი)?/gi,' ').trim();
       const isWeight = /კგ/.test(l) || /^\d+(?:\.\d+)?(?:\s*[-–]\s*\d+(?:\.\d+)?)?$/.test(core);
@@ -1225,14 +1237,17 @@ function productTotals(orders){
       if(/გოჭ/i.test(l)){ piglet+=pcnt; return; }
     });
   });
-  return {piglet, sturN, sturKg, salN, salKg, khach, lob, chick};
+  return {piglet, stur, sal, khach, lob};
 }
 function _fmtN(n){ return (n%1)?(+n.toFixed(2)).toString():n.toString(); }
+function _fishStr(map){
+  return Object.keys(map).map(Number).sort((a,b)=>b-a).map(k=>`${map[k]} ც ${_fmtN(k)} კგ`).join(' · ');
+}
 function dayTotalsHtml(orders){
   const t=productTotals(orders);
   const rows=[`🐷 გოჭი — <b>${_fmtN(t.piglet)}</b>`];
-  if(t.sturN) rows.push(`🐬 ზუთხი — <b>${t.sturN} ც</b> · ${_fmtN(t.sturKg)} კგ`);
-  if(t.salN) rows.push(`🐟 ორაგული — <b>${t.salN} ც</b> · ${_fmtN(t.salKg)} კგ`);
+  if(Object.keys(t.stur).length) rows.push(`🐬 ზუთხი — ${_fishStr(t.stur)}`);
+  if(Object.keys(t.sal).length) rows.push(`🐟 ორაგული — ${_fishStr(t.sal)}`);
   if(t.khach) rows.push(`🫓 ხაჭაპური — <b>${t.khach}</b>`);
   if(t.lob) rows.push(`🫘 ლობიანი — <b>${t.lob}</b>`);
   return `<div style="margin:16px 0 10px;border:2px solid #c0392b;border-radius:14px;background:rgba(192,57,43,.07);padding:12px 16px">
