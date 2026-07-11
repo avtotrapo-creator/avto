@@ -830,8 +830,38 @@ function confirmDelivery(){
   if(o){ o.done=true; store(a); cloudUpdate(o); }
   closeDlvModal(); render();
 }
-function startLP(e,id){}
-function endLP(){}
+function _ctxGuard(){
+  // long-press-ის შემდეგ თითის აშვების „მოჩვენებით" კლიკს ვთიშავთ 300მწ-ით,
+  // რომ მენიუს პუნქტი ან ფონი შემთხვევით არ დაიჭიროს.
+  window._ctxOpenedAt=Date.now();
+  if(!window._ctxGuardOn){
+    window._ctxGuardOn=true;
+    document.addEventListener('click', function(ev){
+      if(window._ctxOpenedAt && Date.now()-window._ctxOpenedAt<300){ ev.stopPropagation(); ev.preventDefault(); }
+    }, true);
+  }
+}
+let _lpTimer=null, _lpXY=null, _lpFired=false;
+function startLP(e,id){
+  cancelLP();
+  const p=e.touches?e.touches[0]:e;
+  _lpXY={x:p.clientX,y:p.clientY};
+  _lpFired=false;
+  const ev={clientX:p.clientX, clientY:p.clientY};
+  _lpTimer=setTimeout(function(){
+    _lpTimer=null; _lpFired=true;
+    _ctxGuard();
+    if(navigator.vibrate){ try{navigator.vibrate(15);}catch(_){} }
+    if(ADMINS.includes(me)) showCtx(ev,id); else showCourierConfirm(id);
+  }, 450);
+}
+function moveLP(e){
+  if(!_lpTimer||!_lpXY) return;
+  const p=e.touches?e.touches[0]:e;
+  if(Math.abs(p.clientX-_lpXY.x)>10 || Math.abs(p.clientY-_lpXY.y)>10) cancelLP();
+}
+function cancelLP(){ if(_lpTimer){ clearTimeout(_lpTimer); _lpTimer=null; } }
+function endLP(){ cancelLP(); }
 function showCtx(e, id){
   if(!ADMINS.includes(me)) return;
   ctxId=id;
@@ -1195,10 +1225,20 @@ function render(){
   el.innerHTML=html;
 
   document.querySelectorAll('.card').forEach(card=>{
+    if(!card.dataset.id) return;                 // ცარიელ paste-კარტს არ ვახებთ (paste უნდა მუშაობდეს)
     const id=+card.dataset.id;
-    card.addEventListener('touchend',    e=>handleTap(e,id), {passive:true});
-    card.addEventListener('contextmenu', e=>{ e.preventDefault(); if(ADMINS.includes(me)) showCtx(e,id); else showCourierConfirm(id); });
-    card.addEventListener('dblclick',    e=>{ if(ADMINS.includes(me)) showCtx(e,id); else showCourierConfirm(id); });
+    // ხანგრძლივი დაჭერა (long-press) — ერთი ხანგრძლივი დაჭერით იხსნება მენიუ (Mac/iPhone/Android)
+    card.addEventListener('touchstart', e=>startLP(e,id), {passive:true});
+    card.addEventListener('touchmove',  moveLP, {passive:true});
+    card.addEventListener('touchend',   endLP, {passive:true});
+    card.addEventListener('touchcancel',endLP, {passive:true});
+    card.addEventListener('mousedown',  e=>{ if(e.button===0) startLP(e,id); });
+    card.addEventListener('mousemove',  moveLP);
+    card.addEventListener('mouseup',    endLP);
+    card.addEventListener('mouseleave', endLP);
+    // დამატებით: ორმაგი დაჭერა (Mac) და მარჯვენა ღილაკი/native long-press
+    card.addEventListener('dblclick',   e=>{ if(ADMINS.includes(me)) showCtx(e,id); else showCourierConfirm(id); });
+    card.addEventListener('contextmenu',e=>{ e.preventDefault(); if(!_lpFired){ if(ADMINS.includes(me)) showCtx(e,id); else showCourierConfirm(id); } });
   });
 }
 
