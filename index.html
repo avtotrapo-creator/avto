@@ -1405,6 +1405,14 @@ function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
   document.addEventListener('selectstart', function(e){
     if(e.target && e.target.closest && e.target.closest('.card[data-id]')) e.preventDefault();
   }, true);
+  // სანამ მენიუ/მოდალი ღიაა — სქროლი გაყინული, რომ მენიუ იმ შეკვეთაზე დარჩეს რომელსაც დააჭირე
+  function _menuOpen(){
+    var ctx=document.getElementById('ctx');
+    var dlv=document.getElementById('dlv-modal');
+    return (ctx && ctx.classList.contains('on')) || (dlv && dlv.style.display && dlv.style.display!=='none');
+  }
+  document.addEventListener('touchmove', function(e){ if(_menuOpen()) e.preventDefault(); }, {passive:false});
+  document.addEventListener('wheel',     function(e){ if(_menuOpen()) e.preventDefault(); }, {passive:false});
 })();
 </script>
 <script>
