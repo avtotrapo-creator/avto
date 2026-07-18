@@ -576,18 +576,9 @@ function _intendedDate(raw, anchor){
   return _y(a);
 }
 function repairWrongFutureDates(arr){
-  // მომავალ თარიღიან შეკვეთას ვუბრუნებთ სწორ თარიღს — მისი ტექსტიდან, შექმნის დღის მიხედვით.
-  // არასწორად „გადმოხტომილი" შეკვეთა ბრუნდება თავის ნამდვილ დღეზე (მაგ. „შაბათი" → ამ შაბათს).
-  // ნამდვილად მომავალი შეკვეთა (ნამდვილი თარიღიც მომავალშია) ხელუხლებელი რჩება.
-  var todayStr=today();
-  arr.forEach(function(o){
-    if(!o.date || o.date<=todayStr) return; // მხოლოდ მომავალ თარიღიანებს
-    var intended=_intendedDate(o.raw, new Date(o.id));
-    if(intended && intended!==o.date && intended<=todayStr){
-      o.date=intended;
-      cloudUpdate(o);
-    }
-  });
+  // გამორთულია სამუდამოდ: აპი ვერასდროს გადაიტანს ან წაშლის შეკვეთას თავისით.
+  // შეკვეთა რჩება ზუსტად იმ დღეზე, რომელზეც დაიდო. თარიღი მხოლოდ ხელით,
+  // ✏️ ჩასწორებით შეიცვლება; წაშლა მხოლოდ 🗑️ ღილაკით.
   store(arr);
 }
 var _realtimeTimer=null;
