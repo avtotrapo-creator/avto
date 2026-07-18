@@ -1443,5 +1443,41 @@ if('serviceWorker' in navigator){
     });
 }
 </script>
+
+<script>
+// === PIWKINA CLOUD SYNC ===
+(function() {
+  var WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyBNLRYoYhWm6o48Dbi_gBTRreLTSgtzpgr149u3oYYGzWrq_jqmiFWJwq_cioedSE/exec';
+
+  function syncToCloud() {
+    try {
+      var orders = JSON.parse(localStorage.getItem('pw4') || '[]');
+      var today = new Date().toLocaleDateString('sv-SE');
+      var todayOrders = orders.filter(function(o) { return o.date === today; });
+      if (todayOrders.length === 0) return;
+      fetch(WEB_APP_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: today, orders: todayOrders })
+      }).catch(function(e) { console.log('piwkina sync error', e); });
+    } catch(e) { console.log('piwkina sync error', e); }
+  }
+
+  // Auto-sync: patch localStorage.setItem to sync when pw4 changes
+  var _origSetItem = localStorage.setItem.bind(localStorage);
+  localStorage.setItem = function(key, value) {
+    _origSetItem(key, value);
+    if (key === 'pw4') { setTimeout(syncToCloud, 300); }
+  };
+
+  // Sync on page load (after 3 seconds)
+  setTimeout(syncToCloud, 3000);
+
+  window.syncToCloud = syncToCloud;
+})();
+// === END CLOUD SYNC ===
+</script>
+
 </body>
 </html>
