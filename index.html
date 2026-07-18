@@ -1285,7 +1285,7 @@ function productTotals(orders){
       if(/ხაჭაპ/i.test(l)){ khach+=intCount(l); return; }
       if(/ლობ/i.test(l)){ lob+=intCount(l); return; }
       if(/წიწილ/i.test(l)){ return; }
-      if(/(^|\s)ნახ/.test(l) && !/კგ/.test(l) && l.replace(/[^Ⴀ-ჿ]/g,'').length<=8){ piglet+=1; return; }
+      if(/(^|\s)ნახ(ევარი)?(?![ა-ჰ])/.test(l) && !/კგ/.test(l)){ piglet+=1; return; }  // „ნახ" ცალკე სიტყვად (თუნდაც აღწერა მოჰყვეს), მისამართს (ნახიმოვის) არ იჭერს
       const core=l.replace(/[🐷🐖❗️❗📌⭕️*]/g,'').replace(/ბომბა|გრძელი|დაჭრ\S*|კგ|ც(?:ალი)?/gi,' ').trim();
       // ბუნდოვანი წონაც (მაგ. "5-+", "5+", "6/7") — იწყება ციფრით, ქართული ასოები არ აქვს, გრძელი ნომერი (ტელეფონი) არ არის
       const looseWeight = /^\d/.test(core) && core.replace(/[^Ⴀ-ჿ]/g,'').length===0 && !/\d{4,}/.test(core);
