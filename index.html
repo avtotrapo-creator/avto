@@ -912,12 +912,14 @@ function ctxDone(){
   const a=load(), o=a.find(x=>x.id===ctxId); if(o){ if(!ADMINS.includes(me)&&o.done){ closeCtx(); return; } o.done=!o.done; store(a); cloudUpdate(o); }
   closeCtx(); render();
 }
+var _editChosenDate=null;
 function ctxEdit(){
   const o=load().find(x=>x.id===ctxId); if(!o){ closeCtx(); return; }
   const savedId=ctxId;
+  _editChosenDate=null; // ჩასწორება თარიღს არ ცვლის, სანამ მომხმარებელი ხელით არ დააჭერს თარიღის ღილაკს
   document.getElementById('e-raw').value=o.raw||'';
   initEditDateButtons();
-  highlightEditDate(o.raw||'');
+  highlightEditDateByDate(o.date);
   document.getElementById('edit-modal').classList.add('on');
   closeCtx();
   ctxId=savedId;
@@ -948,17 +950,13 @@ function setEditDate(d){
   const map={'დღეს':'edt-today','ხვალ':'edt-tom','ზეგ':'edt-dag'};
   const sel=document.getElementById(map[d]);
   if(sel){sel.style.borderColor='#c0392b';sel.style.background='#c0392b';sel.style.color='#fff';}
-  let raw=document.getElementById('e-raw').value;
-  raw=raw.replace(_wdRe(), d);
-  document.getElementById('e-raw').value=raw;
+  _editChosenDate = (d==='დღეს'?today():(d==='ხვალ'?tom():dag()));
 }
 function setEditDateWd(ds,wname,btnId){
   _allEditBtnsReset();
   const sel=document.getElementById(btnId);
   if(sel){sel.style.borderColor='#c0392b';sel.style.background='#c0392b';sel.style.color='#fff';}
-  let raw=document.getElementById('e-raw').value;
-  raw=raw.replace(_wdRe(), wname);
-  document.getElementById('e-raw').value=raw;
+  _editChosenDate = ds;
 }
 function initEditDateButtons(){
   const c=document.getElementById('edt-weekdays');
@@ -978,14 +976,13 @@ function initEditDateButtons(){
     c.appendChild(btn);
   }
 }
-function highlightEditDate(raw){
-  const d=detectDate(raw);
+function highlightEditDateByDate(dateStr){
   _allEditBtnsReset();
   const map={[today()]:'edt-today',[tom()]:'edt-tom',[dag()]:'edt-dag'};
-  const selId=map[d];
-  if(selId){const b=document.getElementById(selId);b.style.borderColor='#c0392b';b.style.background='#c0392b';b.style.color='#fff';}
+  const selId=map[dateStr];
+  if(selId){const b=document.getElementById(selId);if(b){b.style.borderColor='#c0392b';b.style.background='#c0392b';b.style.color='#fff';}}
   document.querySelectorAll('#edt-weekdays button').forEach(b=>{
-    if(b.dataset.ds===d){b.style.borderColor='#c0392b';b.style.background='#c0392b';b.style.color='#fff';}
+    if(b.dataset.ds===dateStr){b.style.borderColor='#c0392b';b.style.background='#c0392b';b.style.color='#fff';}
   });
 }
 function closeEdit(){ document.getElementById('edit-modal').classList.remove('on'); ctxId=null; }
@@ -1000,7 +997,7 @@ function saveEdit(){
     raw=autoFormat(raw);
     o.raw   = raw;
     o.phone = extractPhone(raw);
-    o.date  = detectDate(raw);
+    o.date  = _editChosenDate || o.date; // თარიღი იცვლება მხოლოდ თუ მომხმარებელმა ხელით დააჭირა თარიღის ღილაკს
     store(a);
     cloudUpdate(o);
     closeEdit();
@@ -1255,6 +1252,12 @@ function render(){
   });
 }
 
+function _isDateLine(l){
+  // თარიღის/დროის ხაზი — არასდროს ითვლება პროდუქტად (მაგ. შეცდომით ჩაწერილი „დღეს 1-3 კგ")
+  return /(^|\s)(დღეს|ხვალ|ზეგ)(\s|$)/.test(l)
+    || new RegExp('(^|\\s)('+GEO_WDAYS.map(x=>x[0]).join('|')+')(\\s|$)').test(l)
+    || /\d+\s*ში(\s|$)/.test(l);
+}
 function productTotals(orders){
   let piglet=0, khach=0, lob=0, dafa=0;
   const stur={}, sal={};   // kg -> ცალის რაოდენობა
@@ -1285,6 +1288,7 @@ function productTotals(orders){
       if(/ხაჭაპ/i.test(l)){ khach+=intCount(l); return; }
       if(/ლობ/i.test(l)){ lob+=intCount(l); return; }
       if(/წიწილ/i.test(l)){ return; }
+      if(_isDateLine(l)) return;   // თარიღის/დროის ხაზი — წონად/გოჭად არ ითვლება
       if(/(^|\s)ნახ(ევარი)?(?![ა-ჰ])/.test(l) && !/კგ/.test(l)){ piglet+=1; return; }  // „ნახ" ცალკე სიტყვად (თუნდაც აღწერა მოჰყვეს), მისამართს (ნახიმოვის) არ იჭერს
       const core=l.replace(/[🐷🐖❗️❗📌⭕️*]/g,'').replace(/ბომბა|გრძელი|დაჭრ\S*|კგ|ც(?:ალი)?/gi,' ').trim();
       // ბუნდოვანი წონაც (მაგ. "5-+", "5+", "6/7") — იწყება ციფრით, ქართული ასოები არ აქვს, გრძელი ნომერი (ტელეფონი) არ არის
