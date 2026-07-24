@@ -5,7 +5,7 @@
 <script>
 // Force fresh load — bypass any cached old version
 (function(){
-  var V='v15';
+  var V='v16';
   if(location.search.indexOf('v='+V)===-1){
     location.replace('?v='+V);
   }
@@ -267,6 +267,7 @@ body.dark .cs-row { border-color:#2a2a2a; }
     <div style="display:flex;gap:6px;align-items:center">
 <button class="outbtn" id="install-hdr" onclick="doInstall()" title="აპლიკაციის დაყენება" style="display:none;background:rgba(255,255,255,.25);padding:7px 11px">📲</button>
     <button class="outbtn" id="ref-btn" onclick="doRefresh()" title="განახლება" style="background:rgba(255,255,255,.25);padding:7px 11px">🔄</button>
+    <button class="outbtn" id="clean-future-btn" onclick="cleanFuture()" title="მომავალი დღეების გასუფთავება" style="display:none;background:rgba(255,255,255,.25);padding:7px 11px">🧹</button>
     <button class="outbtn" id="dark-btn" onclick="toggleDark()" title="Dark/Light" style="background:rgba(255,255,255,.25);padding:7px 11px">☀️</button>
       <button class="outbtn" onclick="logout()">გასვლა</button>
     </div>
@@ -319,7 +320,6 @@ body.dark .cs-row { border-color:#2a2a2a; }
     </div>
 
     <button class="addbtn" id="addbtn" onclick="openForm()">➕ ახალი შეკვეთა</button>
-    <button class="addbtn" id="clean-future-btn" onclick="cleanFuture()" style="display:none;background:#c0392b;margin-top:8px;font-size:14px">🧹 მომავალი დღეების გასუფთავება</button>
 
     <div class="formbox" id="form">
       <div class="fgroup">
