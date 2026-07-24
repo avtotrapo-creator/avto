@@ -5,7 +5,7 @@
 <script>
 // Force fresh load — bypass any cached old version
 (function(){
-  var V='v18';
+  var V='v19';
   if(location.search.indexOf('v='+V)===-1){
     location.replace('?v='+V);
   }
@@ -799,7 +799,8 @@ function saveOrder(){
     // თუ არ აურჩევია — თითოეულს თავისი დროიდან განესაზღვრება.
     const slot = (_slotManual && _pickedSlot>=0) ? _pickedSlot : slotBucket(raw);
     const slotPfx = (slot>=0 && slot<3) ? '[D'+slot+']' : '';
-    const order={ id: baseId+i, raw: slotPfx+raw, phone: extractPhone(raw), date: detectDate(raw), courier:'', done:false, by:me };
+    // შეკვეთა ჩაჯდება იმ დღეზე, რომელსაც ამ დროს ხედავ (დღეს / კალენდარში არჩეული დღე) — ტექსტს აღარ უკავშირდება.
+    const order={ id: baseId+i, raw: slotPfx+raw, phone: extractPhone(raw), date: (tabToDate(tab)||today()), courier:'', done:false, by:me };
     a.push(order);
     added.push(order);
   });
