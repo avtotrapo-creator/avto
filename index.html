@@ -5,7 +5,7 @@
 <script>
 // Force fresh load — bypass any cached old version
 (function(){
-  var V='v17';
+  var V='v18';
   if(location.search.indexOf('v='+V)===-1){
     location.replace('?v='+V);
   }
@@ -276,7 +276,7 @@ body.dark .cs-row { border-color:#2a2a2a; }
     <div class="tab on" onclick="setTab('orders')" id="t-orders" style="display:none">შეკვეთები</div>
     <div class="tab" onclick="setTab('mine')" id="t-mine" style="display:none">ჩემი</div>
     <div class="tab" onclick="setTab('today')" id="t-today">დღეს</div>
-    <div class="tab" onclick="setTab('tom')" id="t-tom">ხვალ</div>
+    <div class="tab" onclick="setTab('tom')" id="t-tom" style="display:none">ხვალ</div>
     <div class="tab" onclick="setTab('dag')" id="t-dag" style="display:none">ზეგ</div>
     <div class="tab" id="t-cal" style="font-size:18px;position:relative;" onclick="openCalTab()">
       <span id="t-cal-txt" style="pointer-events:none;position:relative;z-index:1;display:inline-flex;flex-direction:column;align-items:center;width:24px;height:22px;border:2px solid currentColor;border-radius:4px;overflow:hidden;line-height:1;vertical-align:middle">
@@ -679,7 +679,7 @@ function login(n,r){
     document.getElementById('addbtn').style.display='flex';
     document.getElementById('stats').style.display='grid';
     var _st=localStorage.getItem('pw4_tab');
-    if(!['today','tom','cal'].includes(_st)) _st='today';
+    if(!['today','cal'].includes(_st)) _st='today';
     setTab(_st);
   } else {
     document.getElementById('t-mine').style.display='block';
