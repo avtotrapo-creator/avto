@@ -5,7 +5,7 @@
 <script>
 // Force fresh load — bypass any cached old version
 (function(){
-  var V='v14';
+  var V='v15';
   if(location.search.indexOf('v='+V)===-1){
     location.replace('?v='+V);
   }
@@ -319,6 +319,7 @@ body.dark .cs-row { border-color:#2a2a2a; }
     </div>
 
     <button class="addbtn" id="addbtn" onclick="openForm()">➕ ახალი შეკვეთა</button>
+    <button class="addbtn" id="clean-future-btn" onclick="cleanFuture()" style="display:none;background:#c0392b;margin-top:8px;font-size:14px">🧹 მომავალი დღეების გასუფთავება</button>
 
     <div class="formbox" id="form">
       <div class="fgroup">
@@ -552,6 +553,19 @@ function cloudLoad(){
     });
   }).catch(function(){return null;});
 }
+function cleanFuture(){
+  // მომავალი დღეების (და დღევანდელის) ყველა შეკვეთის ერთიანი წაშლა — მხოლოდ ავთო/ხათო, მხოლოდ ხელით დაჭერით.
+  if(!ADMINS.includes(me)) return;
+  var a=load(), T=today();
+  var fut=a.filter(function(o){return o.date>=T;});
+  if(!fut.length){ alert('🧹 დღეიდან მომავალში შეკვეთა არ არის — სუფთაა.'); return; }
+  var ok=prompt('🧹 დღეიდან და ყველა მომავალ დღეში '+fut.length+' შეკვეთაა.\n\nყველა სამუდამოდ წასაშლელად დაწერე: წაშლა');
+  if(ok!=='წაშლა') return;
+  store(a.filter(function(o){return o.date<T;}));
+  fut.forEach(function(o){ cloudDelete(o.id); });
+  render();
+  alert('✅ წაიშალა '+fut.length+' შეკვეთა. მომავალი სუფთაა — ახლა მხოლოდ შენ ჩასვამ.');
+}
 function fixNumericDates(arr){
   // DISABLED: was moving past orders to wrong future dates (e.g. "24 ში" → July 24 the next day)
   // UTC ymd() bug is already fixed — this function is no longer needed
@@ -675,6 +689,7 @@ function login(n,r){
     document.getElementById('addbtn').style.display='flex';
     document.getElementById('stats').style.display='grid';
     document.getElementById('t-orders').style.display='block';
+    document.getElementById('clean-future-btn').style.display='flex';
     setTab(localStorage.getItem('pw4_tab') || 'orders');
   } else {
     document.getElementById('t-mine').style.display='block';
